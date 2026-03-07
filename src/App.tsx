@@ -147,8 +147,18 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-md text-center"
         >
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-brand rounded-[2.5rem] mb-8 shadow-2xl shadow-brand/20">
-            <Dumbbell size={48} className="text-black" />
+          <div className="flex flex-col items-center mb-8">
+            <div className="w-24 h-24 bg-brand rounded-[2.5rem] shadow-2xl shadow-brand/20 flex items-center justify-center overflow-hidden">
+              <img 
+                src="/apple-touch-icon.png" 
+                alt="Logo" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dumbbell text-black"><path d="m6.5 6.5 11 11"/><path d="m10 10 4 4"/><path d="m3 7 4-4"/><path d="m15 19 4-4"/><path d="m3 21 6-6"/><path d="m15 9 6-6"/><path d="M2.6 19a2 2 0 1 0 2.8 2.8l-2.8-2.8Z"/><path d="M18.6 3a2 2 0 1 0 2.8 2.8l-2.8-2.8Z"/><path d="M2.6 5a2 2 0 1 1 2.8-2.8l-2.8 2.8Z"/><path d="M18.6 21a2 2 0 1 1 2.8-2.8l-2.8 2.8Z"/></svg>';
+                }}
+              />
+            </div>
           </div>
           <h1 className="text-5xl font-black text-white tracking-tighter mb-2 italic">GymTrainer<span className="text-brand">PRO</span></h1>
           <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-16">Performance Tracking</p>
@@ -247,6 +257,15 @@ function HomeView({
       exit={{ opacity: 0, x: -20 }}
       className="flex-1 flex flex-col p-6 pt-12"
     >
+      <div className="flex justify-center mb-8">
+        <img 
+          src="/apple-touch-icon.png" 
+          alt="Logo" 
+          className="w-16 h-16 object-contain"
+          onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+        />
+      </div>
+
       <header className="flex justify-between items-center mb-10">
         <div className="flex items-center gap-4">
           <div className="relative">
