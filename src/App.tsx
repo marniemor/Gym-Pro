@@ -160,7 +160,10 @@ export default function App() {
               />
             </div>
           </div>
-          <h1 className="text-5xl font-black text-white tracking-tighter mb-2 italic">GymTrainer<span className="text-brand">PRO</span></h1>
+          <h1 className="text-5xl font-black text-white tracking-tighter mb-2 italic flex flex-col items-center leading-tight">
+            <span>Gym Trainer</span>
+            <span className="text-brand">PRO</span>
+          </h1>
           <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-16">Performance Tracking</p>
           
           <div className="grid grid-cols-2 gap-4">
@@ -258,12 +261,14 @@ function HomeView({
       className="flex-1 flex flex-col p-6 pt-12"
     >
       <div className="flex justify-center mb-8">
-        <img 
-          src="/apple-touch-icon.png" 
-          alt="Logo" 
-          className="w-16 h-16 object-contain"
-          onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
-        />
+        <div className="w-16 h-16 bg-brand rounded-2xl shadow-2xl shadow-brand/20 flex items-center justify-center overflow-hidden">
+          <img 
+            src="/apple-touch-icon.png" 
+            alt="Logo" 
+            className="w-full h-full object-cover"
+            onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+          />
+        </div>
       </div>
 
       <header className="flex justify-between items-center mb-10">
