@@ -141,30 +141,25 @@ export default function App() {
 
   if (!activeProfile) {
     return (
-      <div className="min-h-screen bg-bg flex flex-col items-center justify-center p-8">
+      <div className="min-h-screen bg-bg flex flex-col items-center justify-center p-8 relative overflow-hidden">
+        {/* Background Glows */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-brand/5 rounded-full blur-[100px] pointer-events-none animate-pulse" />
+        
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md text-center"
+          className="w-full max-w-md text-center relative z-10"
         >
-          <div className="flex flex-col items-center mb-8">
-            <div className="w-24 h-24 bg-brand rounded-[2.5rem] shadow-2xl shadow-brand/20 flex items-center justify-center overflow-hidden">
-              <img 
-                src="/apple-touch-icon.png" 
-                alt="Logo" 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                  (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dumbbell text-black"><path d="m6.5 6.5 11 11"/><path d="m10 10 4 4"/><path d="m3 7 4-4"/><path d="m15 19 4-4"/><path d="m3 21 6-6"/><path d="m15 9 6-6"/><path d="M2.6 19a2 2 0 1 0 2.8 2.8l-2.8-2.8Z"/><path d="M18.6 3a2 2 0 1 0 2.8 2.8l-2.8-2.8Z"/><path d="M2.6 5a2 2 0 1 1 2.8-2.8l-2.8 2.8Z"/><path d="M18.6 21a2 2 0 1 1 2.8-2.8l-2.8 2.8Z"/></svg>';
-                }}
-              />
-            </div>
+          <div className="mb-12">
+            <h1 className="text-7xl font-black text-white tracking-tighter italic flex flex-col items-center leading-[0.85] uppercase">
+              <span className="opacity-90">Gym</span>
+              <span className="opacity-95">Trainer</span>
+              <span className="text-brand drop-shadow-[0_0_30px_rgba(34,197,94,0.3)]">PRO</span>
+            </h1>
+            <div className="h-1 w-12 bg-brand mx-auto mt-6 rounded-full" />
           </div>
-          <h1 className="text-5xl font-black text-white tracking-tighter mb-2 italic flex flex-col items-center leading-tight">
-            <span>Gym Trainer</span>
-            <span className="text-brand">PRO</span>
-          </h1>
-          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-16">Performance Tracking</p>
+          <p className="text-zinc-500 text-[11px] font-black uppercase tracking-[0.5em] mb-20 opacity-80">Performance Tracking System</p>
           
           <div className="grid grid-cols-2 gap-4">
             {Object.keys(PROFILE_IMAGES).map(name => (
@@ -260,17 +255,6 @@ function HomeView({
       exit={{ opacity: 0, x: -20 }}
       className="flex-1 flex flex-col p-6 pt-12"
     >
-      <div className="flex justify-center mb-8">
-        <div className="w-16 h-16 bg-brand rounded-2xl shadow-2xl shadow-brand/20 flex items-center justify-center overflow-hidden">
-          <img 
-            src="/apple-touch-icon.png" 
-            alt="Logo" 
-            className="w-full h-full object-cover"
-            onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
-          />
-        </div>
-      </div>
-
       <header className="flex justify-between items-center mb-10">
         <div className="flex items-center gap-4">
           <div className="relative">
