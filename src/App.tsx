@@ -67,16 +67,16 @@ const WeightInput = ({
           value={localValue} 
           onChange={(e) => setLocalValue(e.target.value)}
           onBlur={() => onSave(localValue)}
-          className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl px-5 py-4 text-2xl font-black text-white focus:outline-none focus:border-brand/50 transition-all placeholder:text-zinc-800" 
+          className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl px-4 sm:px-5 py-3 sm:py-4 text-xl sm:text-2xl font-black text-white focus:outline-none focus:border-brand/50 transition-all placeholder:text-zinc-800" 
           placeholder="0.0" 
         />
-        <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-zinc-600 uppercase tracking-widest">kg</span>
+        <span className="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-[9px] sm:text-[10px] font-black text-zinc-600 uppercase tracking-widest">kg</span>
       </div>
       <button 
         onClick={() => onSave(localValue)}
-        className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all ${localValue === value && value !== '' ? 'bg-brand text-black shadow-lg shadow-brand/20' : 'bg-zinc-900 border border-zinc-800 text-zinc-600'}`}
+        className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all ${localValue === value && value !== '' ? 'bg-brand text-black shadow-lg shadow-brand/20' : 'bg-zinc-900 border border-zinc-800 text-zinc-600'}`}
       >
-        <Check size={20} className={localValue === value && value !== '' ? 'stroke-[4px]' : 'stroke-[2px]'} />
+        <Check size={18} className={localValue === value && value !== '' ? 'stroke-[4px]' : 'stroke-[2px]'} />
       </button>
     </div>
   );
@@ -366,7 +366,9 @@ function WorkoutView({
   const [isResting, setIsResting] = useState(false);
   const [restTime, setRestTime] = useState(0);
   const [sessionData, setSessionData] = useState<Record<string, string[]>>(initialWeights);
+  const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
   const [showVideo, setShowVideo] = useState(false);
+  const [showFinishModal, setShowFinishModal] = useState(false);
 
   const exercise = day.ejercicios[exerciseIdx];
   const isLastExercise = exerciseIdx === day.ejercicios.length - 1;
@@ -393,31 +395,52 @@ function WorkoutView({
     onSaveWeight(exercise.id, currentSet - 1, val);
   };
 
+  const toggleExerciseCompletion = (id: string) => {
+    setCompletedExercises(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const handleNext = () => {
     if (currentSet < exercise.series) {
       setCurrentSet(prev => prev + 1);
       setRestTime(exercise.descanso_segundos);
       setIsResting(true);
-    } else if (!isLastExercise) {
-      setExerciseIdx(prev => prev + 1);
-      setCurrentSet(1);
-      setRestTime(exercise.descanso_segundos);
-      setIsResting(true);
     } else {
-      // Finish workout
-      const session: WorkoutSession = {
-        id: crypto.randomUUID(),
-        dayName: day.nombre,
-        userName: profile,
-        date: new Date().toISOString(),
-        exercises: day.ejercicios.map(ex => ({
+      // Mark as completed when finishing all sets
+      if (!completedExercises.has(exercise.id)) {
+        toggleExerciseCompletion(exercise.id);
+      }
+      
+      if (!isLastExercise) {
+        setExerciseIdx(prev => prev + 1);
+        setCurrentSet(1);
+        setRestTime(exercise.descanso_segundos);
+        setIsResting(true);
+      } else {
+        setShowFinishModal(true);
+      }
+    }
+  };
+
+  const confirmFinish = (userName: string) => {
+    const session: WorkoutSession = {
+      id: crypto.randomUUID(),
+      dayName: day.nombre,
+      userName: userName,
+      date: new Date().toISOString(),
+      exercises: day.ejercicios
+        .filter(ex => completedExercises.has(ex.id) || (sessionData[ex.id]?.some(s => s !== '')))
+        .map(ex => ({
           id: ex.id,
           nombre: ex.nombre,
           sets: sessionData[ex.id] || []
         }))
-      };
-      onFinish(session);
-    }
+    };
+    onFinish(session);
   };
 
   return (
@@ -425,31 +448,55 @@ function WorkoutView({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="flex-1 flex flex-col bg-bg"
+      className="flex-1 flex flex-col bg-bg h-screen"
     >
-      <header className="px-6 pt-10 pb-6 sticky top-0 bg-bg/80 backdrop-blur-xl z-30 border-b border-border">
-        <div className="flex items-center justify-between mb-8">
-          <button onClick={onBack} className="w-10 h-10 flex items-center justify-center bg-surface border border-border rounded-full text-zinc-400 active:scale-90">
-            <ChevronLeft size={20} />
+      <header className="px-4 sm:px-6 pt-8 pb-4 sticky top-0 bg-bg/90 backdrop-blur-xl z-30 border-b border-border">
+        <div className="flex items-center justify-between mb-6">
+          <button onClick={onBack} className="w-9 h-9 flex items-center justify-center bg-surface border border-border rounded-full text-zinc-400 active:scale-90">
+            <ChevronLeft size={18} />
           </button>
           <div className="text-center">
-            <p className="text-[10px] font-black text-brand uppercase tracking-[0.2em] mb-1">Entrenando</p>
-            <h2 className="text-sm font-black text-white uppercase italic">{day.nombre.split('–')[1] || day.nombre}</h2>
+            <p className="text-[9px] font-black text-brand uppercase tracking-[0.2em] mb-0.5">Entrenando</p>
+            <h2 className="text-xs font-black text-white uppercase italic truncate max-w-[150px]">{day.nombre.split('–')[1] || day.nombre}</h2>
           </div>
-          <div className="w-10 h-10" />
+          <button 
+            onClick={() => setShowFinishModal(true)}
+            className="px-3 py-1.5 bg-brand/10 border border-brand/20 rounded-lg text-brand text-[9px] font-black uppercase tracking-widest active:scale-95"
+          >
+            Terminar
+          </button>
         </div>
         
-        <div className="flex gap-1.5 h-1.5">
-          {day.ejercicios.map((_, i) => (
-            <div 
-              key={i} 
-              className={`flex-1 rounded-full transition-all duration-500 ${i === exerciseIdx ? 'bg-brand shadow-[0_0_10px_rgba(34,197,94,0.5)]' : i < exerciseIdx ? 'bg-brand/30' : 'bg-zinc-800'}`}
-            />
+        {/* Exercise Navigation Rail */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2">
+          {day.ejercicios.map((ex, i) => (
+            <button
+              key={ex.id}
+              onClick={() => {
+                setExerciseIdx(i);
+                setCurrentSet(1);
+                setIsResting(false);
+              }}
+              className={`flex-shrink-0 w-10 h-10 rounded-xl border flex items-center justify-center transition-all relative ${
+                i === exerciseIdx 
+                  ? 'bg-brand border-brand text-black shadow-lg shadow-brand/20' 
+                  : completedExercises.has(ex.id)
+                    ? 'bg-brand/10 border-brand/30 text-brand'
+                    : 'bg-surface border-border text-zinc-600'
+              }`}
+            >
+              <span className="text-xs font-black italic">{i + 1}</span>
+              {completedExercises.has(ex.id) && i !== exerciseIdx && (
+                <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-brand rounded-full flex items-center justify-center border-2 border-bg">
+                  <Check size={8} className="text-black stroke-[4px]" />
+                </div>
+              )}
+            </button>
           ))}
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-6 py-8 no-scrollbar pb-32">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 no-scrollbar pb-32">
         <AnimatePresence mode="wait">
           {isResting ? (
             <motion.div 
@@ -457,29 +504,29 @@ function WorkoutView({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
-              className="flex flex-col items-center justify-center py-12"
+              className="flex flex-col items-center justify-center py-8"
             >
-              <div className="relative w-64 h-64 flex items-center justify-center mb-12">
+              <div className="relative w-48 h-48 sm:w-64 sm:h-64 flex items-center justify-center mb-8">
                 <svg className="absolute inset-0 w-full h-full -rotate-90">
-                  <circle cx="128" cy="128" r="120" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-zinc-900" />
+                  <circle cx="50%" cy="50%" r="45%" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-zinc-900" />
                   <circle 
-                    cx="128" cy="128" r="120" stroke="currentColor" strokeWidth="4" fill="transparent" 
-                    strokeDasharray={754} 
-                    strokeDashoffset={754 - (754 * restTime) / exercise.descanso_segundos} 
+                    cx="50%" cy="50%" r="45%" stroke="currentColor" strokeWidth="4" fill="transparent" 
+                    strokeDasharray="283%" 
+                    strokeDashoffset={`${283 - (283 * restTime) / exercise.descanso_segundos}%`} 
                     className="text-brand transition-all duration-1000" 
                     strokeLinecap="round" 
                   />
                 </svg>
                 <div className="text-center">
-                  <p className="text-7xl font-black text-white tabular-nums tracking-tighter italic">
+                  <p className="text-5xl sm:text-7xl font-black text-white tabular-nums tracking-tighter italic">
                     {Math.floor(restTime / 60)}:{String(restTime % 60).padStart(2, '0')}
                   </p>
-                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mt-2">Descanso</p>
+                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.3em] mt-1">Descanso</p>
                 </div>
               </div>
               <button 
                 onClick={() => setRestTime(0)}
-                className="btn-secondary w-48"
+                className="btn-secondary w-40 py-3 text-[10px]"
               >
                 Saltar
               </button>
@@ -489,30 +536,42 @@ function WorkoutView({
               key="exercise"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-8"
+              className="space-y-6"
             >
-              <div>
-                <span className="text-brand font-black text-[10px] tracking-[0.3em] uppercase mb-2 block">Ejercicio {exerciseIdx + 1} de {day.ejercicios.length}</span>
-                <h3 className="text-4xl font-black text-white tracking-tighter italic leading-tight">{exercise.nombre}</h3>
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex-1">
+                  <span className="text-brand font-black text-[9px] tracking-[0.3em] uppercase mb-1 block">Ejercicio {exerciseIdx + 1} de {day.ejercicios.length}</span>
+                  <h3 className="text-2xl sm:text-4xl font-black text-white tracking-tighter italic leading-tight">{exercise.nombre}</h3>
+                </div>
+                <button 
+                  onClick={() => toggleExerciseCompletion(exercise.id)}
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all ${
+                    completedExercises.has(exercise.id) 
+                      ? 'bg-brand border-brand text-black shadow-lg shadow-brand/20' 
+                      : 'bg-surface border-border text-zinc-700'
+                  }`}
+                >
+                  <Check size={24} className={completedExercises.has(exercise.id) ? 'stroke-[4px]' : 'stroke-[2px]'} />
+                </button>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-surface border border-border rounded-2xl p-5 text-center">
-                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Serie</p>
-                  <p className="text-2xl font-black text-white italic">{currentSet}<span className="text-zinc-700 text-sm">/{exercise.series}</span></p>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div className="bg-surface border border-border rounded-2xl p-3 sm:p-5 text-center">
+                  <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-0.5">Serie</p>
+                  <p className="text-xl sm:text-2xl font-black text-white italic">{currentSet}<span className="text-zinc-700 text-xs">/{exercise.series}</span></p>
                 </div>
-                <div className="bg-surface border border-border rounded-2xl p-5 text-center">
-                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Reps</p>
-                  <p className="text-2xl font-black text-white italic">{exercise.repeticiones}</p>
+                <div className="bg-surface border border-border rounded-2xl p-3 sm:p-5 text-center">
+                  <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-0.5">Reps</p>
+                  <p className="text-xl sm:text-2xl font-black text-white italic">{exercise.repeticiones}</p>
                 </div>
-                <div className="bg-surface border border-border rounded-2xl p-5 text-center">
-                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">RPE</p>
-                  <p className="text-2xl font-black text-brand italic">@{exercise.intensidad_rpe[currentSet - 1] || exercise.intensidad_rpe[0]}</p>
+                <div className="bg-surface border border-border rounded-2xl p-3 sm:p-5 text-center">
+                  <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-0.5">RPE</p>
+                  <p className="text-xl sm:text-2xl font-black text-brand italic">@{exercise.intensidad_rpe[currentSet - 1] || exercise.intensidad_rpe[0]}</p>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">Registrar Carga</p>
+              <div className="space-y-3">
+                <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.3em]">Registrar Carga</p>
                 <WeightInput 
                   exerciseId={exercise.id}
                   setIndex={currentSet - 1}
@@ -521,19 +580,19 @@ function WorkoutView({
                 />
               </div>
 
-              <div className="bg-surface/30 border border-border rounded-3xl p-6">
-                <div className="flex items-center gap-2 mb-3 text-zinc-400">
-                  <Info size={14} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Observaciones</span>
+              <div className="bg-surface/30 border border-border rounded-2xl p-4 sm:p-6">
+                <div className="flex items-center gap-2 mb-2 text-zinc-400">
+                  <Info size={12} />
+                  <span className="text-[9px] font-black uppercase tracking-widest">Observaciones</span>
                 </div>
-                <p className="text-zinc-300 text-sm leading-relaxed italic">"{exercise.observaciones}"</p>
+                <p className="text-zinc-300 text-xs sm:text-sm leading-relaxed italic">"{exercise.observaciones}"</p>
               </div>
 
               <button 
                 onClick={() => setShowVideo(true)}
-                className="w-full py-4 flex items-center justify-center gap-2 text-zinc-500 font-black text-[10px] uppercase tracking-[0.2em] border border-border rounded-2xl hover:text-white transition-colors"
+                className="w-full py-3 flex items-center justify-center gap-2 text-zinc-500 font-black text-[9px] uppercase tracking-[0.2em] border border-border rounded-xl hover:text-white transition-colors"
               >
-                <Video size={16} /> Ver Técnica
+                <Video size={14} /> Ver Técnica
               </button>
             </motion.div>
           )}
@@ -541,16 +600,63 @@ function WorkoutView({
       </div>
 
       {!isResting && (
-        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-6 bg-gradient-to-t from-bg via-bg to-transparent pt-12 z-40">
+        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 sm:p-6 bg-gradient-to-t from-bg via-bg to-transparent pt-10 z-40">
           <button 
             onClick={handleNext}
-            className="btn-primary w-full py-6 text-lg"
+            className="btn-primary w-full py-5 text-base sm:text-lg"
           >
             {isLastSet && isLastExercise ? 'Finalizar Entrenamiento' : isLastSet ? 'Siguiente Ejercicio' : `Completar Serie ${currentSet}`}
-            <ArrowRight size={20} />
+            <ArrowRight size={18} />
           </button>
         </div>
       )}
+
+      {/* Finish Confirmation Modal */}
+      <AnimatePresence>
+        {showFinishModal && (
+          <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowFinishModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              className="relative w-full max-w-sm bg-surface border border-border rounded-[2.5rem] p-8 shadow-2xl"
+            >
+              <h3 className="text-2xl font-black text-white italic tracking-tight mb-2">¿Quién ha finalizado?</h3>
+              <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] mb-8">Selecciona para guardar el registro</p>
+              
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                {Object.keys(PROFILE_IMAGES).map(name => (
+                  <button 
+                    key={name}
+                    onClick={() => confirmFinish(name)}
+                    className="flex flex-col items-center gap-3 p-4 bg-zinc-900 border border-border rounded-3xl active:scale-95 transition-all hover:border-brand/50"
+                  >
+                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-transparent hover:border-brand transition-all">
+                      <img src={PROFILE_IMAGES[name as keyof typeof PROFILE_IMAGES]} alt={name} className="w-full h-full object-cover" />
+                    </div>
+                    <span className="text-sm font-black text-white">{name}</span>
+                  </button>
+                ))}
+              </div>
+
+              <button 
+                onClick={() => setShowFinishModal(false)}
+                className="w-full py-4 text-zinc-500 font-black text-[10px] uppercase tracking-[0.3em]"
+              >
+                Cancelar
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
 
       {showVideo && (
         <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-6">
@@ -622,9 +728,9 @@ function HistoryView({
               </div>
               <div className="p-6 space-y-4">
                 {session.exercises.map((ex, i) => (
-                  <div key={i} className="flex justify-between items-center">
-                    <p className="text-zinc-400 font-bold text-sm truncate max-w-[60%] italic">{ex.nombre}</p>
-                    <div className="flex gap-1.5">
+                  <div key={i} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                    <p className="text-zinc-400 font-bold text-sm truncate max-w-full sm:max-w-[60%] italic">{ex.nombre}</p>
+                    <div className="flex flex-wrap gap-1.5">
                       {ex.sets.map((w, j) => (
                         <span key={j} className="bg-zinc-900 border border-border text-zinc-300 text-[10px] font-black px-2 py-1 rounded-lg min-w-[36px] text-center">
                           {w || '--'}
