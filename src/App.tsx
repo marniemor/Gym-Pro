@@ -14,8 +14,14 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer
 } from 'recharts';
-import * as XLSX from 'xlsx';
+let XLSX: any;
 
+async function loadXLSX() {
+  if (!XLSX) {
+    XLSX = await import('xlsx');
+  }
+  return XLSX;
+}
 // ─────────────────────────────────────────────
 // STORAGE HELPERS
 // ─────────────────────────────────────────────
@@ -97,7 +103,9 @@ function getExerciseChartData(history: WorkoutSession[], profile: string, exerci
     });
 }
 
-function parseExcelToRoutine(file: File): Promise<Routine> {
+async function parseExcelToRoutine(file: File): Promise<Routine> {
+  const XLSX = await loadXLSX();
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -106,7 +114,7 @@ function parseExcelToRoutine(file: File): Promise<Routine> {
         const wb = XLSX.read(data, { type: 'array' });
         const routine: Routine = { nombre: file.name.replace(/\.xlsx?$/i, ''), dias: [] };
 
-        wb.SheetNames.forEach((sheetName, sheetIdx) => {
+        wb.SheetNames.forEach((sheetName: string, sheetIdx: number) => {
           const ws = wb.Sheets[sheetName];
           const rows = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: '' });
           if (rows.length < 2) return;
@@ -140,26 +148,43 @@ function parseExcelToRoutine(file: File): Promise<Routine> {
             let intensidad_rpe: number[] = rpeRaw.includes(',')
               ? rpeRaw.split(',').map(r => parseInt(r.trim()) || 8)
               : [parseInt(rpeRaw) || 8];
-            while (intensidad_rpe.length < series) intensidad_rpe.push(intensidad_rpe[intensidad_rpe.length - 1]);
+
+            while (intensidad_rpe.length < series) {
+              intensidad_rpe.push(intensidad_rpe[intensidad_rpe.length - 1]);
+            }
 
             ejercicios.push({
               id: `xl_${sheetIdx}_${i}_${Date.now()}`,
-              nombre, series, repeticiones, intensidad_rpe,
-              descanso_segundos, video, observaciones
+              nombre,
+              series,
+              repeticiones,
+              intensidad_rpe,
+              descanso_segundos,
+              video,
+              observaciones
             });
           }
 
           if (ejercicios.length > 0) {
-            routine.dias.push({ dia: sheetIdx + 1, nombre: `Día ${sheetIdx + 1} – ${sheetName}`, ejercicios });
+            routine.dias.push({
+              dia: sheetIdx + 1,
+              nombre: `Día ${sheetIdx + 1} – ${sheetName}`,
+              ejercicios
+            });
           }
         });
 
-        if (routine.dias.length === 0) reject(new Error('No se encontraron ejercicios. Revisa que el archivo tenga las columnas correctas.'));
-        else resolve(routine);
+        if (routine.dias.length === 0) {
+          reject(new Error('No se encontraron ejercicios.'));
+        } else {
+          resolve(routine);
+        }
+
       } catch (err: any) {
         reject(new Error('Error al leer el archivo: ' + err.message));
       }
     };
+
     reader.readAsArrayBuffer(file);
   });
 }
