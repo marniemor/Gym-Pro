@@ -20,20 +20,12 @@ export interface Routine {
   dias: Day[];
 }
 
-export interface SetRecord {
-  weight: string;
-  timestamp: string;
-}
-
-export interface ExerciseRecord {
-  [setIndex: string]: SetRecord;
-}
-
 export interface WorkoutSession {
   id: string;
   dayName: string;
   userName: string;
   date: string;
+  note?: string;
   exercises: {
     id: string;
     nombre: string;

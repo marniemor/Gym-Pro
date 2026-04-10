@@ -1,11 +1,15 @@
 import { Routine } from './types';
 
-export const PROFILE_IMAGES = {
+export const PROFILE_IMAGES: Record<string, string> = {
   "Marcos": "https://lh3.googleusercontent.com/d/1WXGyqR9MtFZwVEsw-J1EdONS7F0RIAWs",
   "Ana": "https://lh3.googleusercontent.com/d/1a_TkDTgG27ODmLz9Lbyk_W6JcSMfvXaY"
 };
 
 export const EXERCISES_SHEET_URL = "https://docs.google.com/spreadsheets/d/1KnV0ymOKG_Cb4foC6KQzBLm4_UtjVPH8bFZHyec9xRU/edit?usp=sharing";
+
+export const ADMIN_PASSWORD = "admin2024";
+
+export const DEFAULT_PROFILES = ["Marcos", "Ana"];
 
 export const ROUTINE_DATA: Routine = {
   nombre: "Fuerza-Hipertrofia 3 Días",
